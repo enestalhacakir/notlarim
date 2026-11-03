@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kart Kahini">
+<meta name="theme-color" content="#0d2720">
+<style>html,body{margin:0}[hidden]{display:none!important}</style>
+<title>Kart Kahini</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..700&family=Caveat:wght@500&family=Figtree:wght@400;600&display=swap">
+<style>
+/* Layout: kulis menüsü tek sütun; gösteri ekranları (kilit ekranı, not) tam ekran sabit katmanlar */
+:root{
+  --felt:#0d2720;
+  --felt-2:#14392d;
+  --ivory:#f2ecdf;
+  --muted:#9fb3a8;
+  --red:#d4283f;
+  --gold:#c9a24a;
+  --line:rgba(242,236,223,.13);
+  --chip:rgba(242,236,223,.06);
+  --paper:#fbf8f1;
+  --ink:#1d1b17;
+  --amber:#b7790f;
+  --display:"Bodoni Moda", Didot, Georgia, serif;
+  --body:"Figtree", -apple-system, "Segoe UI", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{
+  background:var(--felt);color:var(--ivory);font-family:var(--body);font-size:15px;line-height:1.5;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;overflow:hidden;
+}
+button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
+button:focus-visible,label.btn:focus-within{outline:2px solid var(--gold);outline-offset:2px}
+.screen{position:fixed;inset:0}
+
+/* ---------- Kulis menüsü ---------- */
+#menu{overflow-y:auto;-webkit-overflow-scrolling:touch;background:radial-gradient(120% 70% at 50% 0%,var(--felt-2),var(--felt) 65%)}
+.wrap{
+  max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:30px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:calc(env(safe-area-inset-top,0px) + 28px) calc(env(safe-area-inset-bottom,0px) + 48px);
+}
+.masthead h1{font-family:var(--display);font-style:italic;font-weight:600;font-size:clamp(40px,11vw,56px);line-height:1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.masthead h1 span{color:var(--red)}
+.masthead p{margin:10px 0 0;color:var(--muted);max-width:44ch}
+.block{display:flex;flex-direction:column;gap:14px;padding-top:22px;border-top:1px solid var(--line)}
+.block h2{margin:0;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.block h3{margin:0;font-family:var(--display);font-weight:600;font-size:24px;line-height:1.15;text-wrap:balance}
+.block p{margin:0;color:var(--muted)}
+.picker{display:flex;gap:16px;align-items:flex-start}
+.pick-controls{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+.vals{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.suits{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.chip{background:var(--chip);border:1px solid var(--line);border-radius:8px;padding:8px 0;font-weight:600;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--ivory);color:var(--felt);border-color:var(--ivory)}
+.suit-chip{font-size:20px;line-height:1.2}
+.suit-chip.red{color:#ff6b7d}
+.suit-chip.red[aria-pressed="true"]{color:var(--red)}
+#preview{width:96px;height:134px;flex:none;filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
+.pick-name{font-family:var(--display);font-style:italic;font-size:18px;color:var(--ivory)}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;border-radius:10px;border:1px solid var(--line);background:var(--chip);font-weight:600}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+.btn.small{min-height:38px;padding:0 14px;font-size:14px;font-weight:400}
+.btn input{position:absolute;opacity:0;width:1px;height:1px}
+.status{font-size:13px;color:var(--muted)}
+details{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:rgba(0,0,0,.12)}
+summary{cursor:pointer;font-weight:600}
+details ol,details ul{margin:10px 0 0;padding-left:20px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+details b{color:var(--ivory);font-weight:600}
+.maps{display:flex;flex-wrap:wrap;gap:18px}
+.map{display:flex;flex-direction:column;gap:6px}
+.map small{color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.grid4{display:grid;grid-template-columns:repeat(4,40px);grid-template-rows:repeat(4,52px);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.grid4 span{display:grid;place-items:center;border-right:1px solid var(--line);border-bottom:1px solid var(--line);font-weight:600;font-variant-numeric:tabular-nums}
+.grid4 span:nth-child(4n){border-right:0}
+.grid4 span:nth-child(n+13){border-bottom:0}
+.grid4 span.off{color:transparent}
+.grid2{display:grid;grid-template-columns:repeat(2,80px);grid-template-rows:repeat(2,104px);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.grid2 span{display:grid;place-items:center;text-align:center;font-size:13px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);line-height:1.2}
+.grid2 span b{display:block;font-size:24px;font-weight:400}
+.grid2 span:nth-child(2n){border-right:0}
+.grid2 span:nth-child(n+3){border-bottom:0}
+.grid2 .r b{color:#ff6b7d}
+.checks{margin:0;padding-left:20px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.checks b{color:var(--ivory);font-weight:600}
+.exit-hint{font-size:13px;color:var(--muted);border-left:2px solid var(--gold);padding-left:10px}
+
+/* ---------- Sahte kilit ekranı ---------- */
+#lock{background:#000;overflow:hidden;color:#fff}
+.wall{position:absolute;inset:0;width:100%;height:100%;transition:opacity 1.2s ease}
+.ls-top{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 5.5vh);text-align:center;pointer-events:none;
+  font-family:-apple-system,"SF Pro Display","Helvetica Neue",system-ui,sans-serif;text-shadow:0 1px 12px rgba(0,0,0,.25)}
+#ls-date{font-size:19px;font-weight:600;opacity:.92;letter-spacing:.01em}
+#ls-time{font-size:clamp(78px,25vw,128px);font-weight:600;line-height:1;letter-spacing:-.02em;margin-top:2px;font-variant-numeric:tabular-nums}
+.ls-btn{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 40px);width:50px;height:50px;border-radius:50%;
+  background:rgba(0,0,0,.28);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);display:grid;place-items:center;pointer-events:none}
+.ls-btn.l{left:max(46px,calc(env(safe-area-inset-left,0px) + 46px))}
+.ls-btn.r{right:max(46px,calc(env(safe-area-inset-right,0px) + 46px))}
+.ls-btn svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ls-bar{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);width:134px;height:5px;margin-left:-67px;border-radius:3px;background:#fff;transition:opacity .2s;pointer-events:none}
+.ls-bar.tick{opacity:.35}
+
+/* ---------- Silinen not ---------- */
+#note{background:var(--paper);color:var(--ink);display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nbar{display:flex;justify-content:space-between;align-items:center;min-height:48px;
+  padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.nbar button{background:none;border:0;color:var(--amber);font-size:17px;padding:8px 6px}
+.nbar .ndone{font-weight:600}
+.nhead{padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+#ntitle{margin:4px 0 0;font-size:28px;font-weight:700;font-family:-apple-system,"Helvetica Neue",system-ui,sans-serif;display:inline-block}
+#nmeta{margin:2px 0 0;font-size:13px;color:#8d877b;min-height:1.4em}
+#ntext{flex:1;width:100%;border:0;outline:0;resize:none;background:transparent;color:var(--ink);font:400 18px/1.5 -apple-system,"Helvetica Neue",system-ui,sans-serif;
+  padding:14px max(20px,env(safe-area-inset-right,0px)) 14px max(20px,env(safe-area-inset-left,0px));-webkit-user-select:text;user-select:text}
+#ntext::placeholder{color:#b9b2a4}
+.nfoot{display:flex;justify-content:flex-end;border-top:1px solid #e7e1d4;padding:6px max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px))}
+.nfoot button{background:none;border:0;color:var(--amber);font-size:16px;padding:10px 8px}
+
+@media (prefers-reduced-motion:reduce){.wall{transition:none}}
+@media (max-width:420px){.picker{flex-direction:column-reverse;align-items:center}.pick-controls{width:100%}}
+</style>
+</head>
+<body>
+
+<section id="menu" class="screen">
+  <div class="wrap">
+    <header class="masthead">
+      <h1>Kart <span>Kahini</span></h1>
+      <p>Kulis ekranı. Seyirci bu sayfayı hiç görmemeli. Gösteri ekranından buraya dönmek için sol üst köşeye 1 saniye basılı tut.</p>
+    </header>
+
+    <section class="block" aria-labelledby="h-lock">
+      <h2>Numara 1</h2>
+      <h3 id="h-lock">Kilit ekranındaki kart</h3>
+      <p>Telefonun kilit ekranı gibi görünen bir ekran açılır. Duvar kağıdı, seyircinin kartının masada çekilmiş fotoğrafına dönüşür.</p>
+      <div class="picker">
+        <div class="pick-controls">
+          <div class="vals" id="vals" role="group" aria-label="Kart değeri"></div>
+          <div class="suits" id="suits" role="group" aria-label="Kart rengi"></div>
+          <div class="pick-name" id="pick-name"></div>
+        </div>
+        <canvas id="preview" aria-label="Seçili kartın önizlemesi"></canvas>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="go-force" type="button">Bu kartla başlat</button>
+        <button class="btn" id="go-input" type="button">Gizli girişle başlat</button>
+      </div>
+      <details>
+        <summary>Force ile sunum (kart önceden belli)</summary>
+        <ol>
+          <li>Zorlayacağın kartı yukarıdan seç, <b>Bu kartla başlat</b>'a bas.</li>
+          <li>Telefonu ekranı aşağıda masaya koy. "Bunu sonra kullanacağız" de, kimse dokunmasın.</li>
+          <li>Kartı çapraz kesme ile zorla, herkese göstert.</li>
+          <li>Seyirci telefonu kendisi çevirsin. Kilit ekranında kendi kartını görür.</li>
+        </ol>
+      </details>
+      <details>
+        <summary>Gizli girişle sunum (kart serbest seçilir)</summary>
+        <ol>
+          <li><b>Gizli girişle başlat</b>. Normal bir kilit ekranı açılır.</li>
+          <li>Kartı anahtar kartla bul. Saate bakar gibi telefona iki kez dokun: önce değer, sonra renk (haritalar aşağıda).</li>
+          <li>Ekranın altındaki çizgi kısaca soluklaşırsa dokunuş alınmış demektir.</li>
+          <li>İkinci dokunuştan sonra telefonu hemen ekranı aşağı çevir. 3,5 saniye sonra duvar kağıdı sessizce karta döner.</li>
+          <li>"Bu sabah duvar kağıdımı değiştirmiştim" de, seyirci çevirip baksın.</li>
+        </ol>
+      </details>
+    </section>
+
+    <section class="block" aria-labelledby="h-note">
+      <h2>Numara 2</h2>
+      <h3 id="h-note">Silinen not</h3>
+      <p>Seyirci kartını (ya da aklındaki herhangi bir kelimeyi) bir nota yazıp siler. Uygulama silinmeden önceki hali hatırlar.</p>
+      <div class="row"><button class="btn primary" id="go-note" type="button">Notu aç</button></div>
+      <details>
+        <summary>Sunum ve gizli hareketler</summary>
+        <ol>
+          <li>"Kartını buraya yaz, sonra tamamen sil. Ben arkamı dönüyorum." de.</li>
+          <li>Seyirci yazıp silsin ya da <b>Temizle</b>'ye bassın.</li>
+          <li><b>Gizli bakış:</b> "Yeni not" başlığına 0,7 sn basılı tut. Yazılan şey tarih satırında 2,5 saniye görünür.</li>
+          <li><b>Kilit ekranı finali:</b> başlığa hızlıca 3 kez dokun. Kilit ekranı açılır, telefonu ters çevir. Kart yazdıysa kart fotoğrafı, başka bir kelime yazdıysa o kelime el yazısıyla bir not kâğıdında belirir.</li>
+        </ol>
+      </details>
+    </section>
+
+    <section class="block" aria-labelledby="h-map">
+      <h2>Ezberle</h2>
+      <h3 id="h-map">Gizli dokunuş haritası</h3>
+      <p>Kilit ekranında görünmez bir ızgara var. Birinci dokunuş değeri, ikinci dokunuş rengi seçer.</p>
+      <div class="maps">
+        <div class="map"><small>1. dokunuş: değer</small>
+          <div class="grid4" id="map-vals"></div>
+        </div>
+        <div class="map"><small>2. dokunuş: renk</small>
+          <div class="grid2">
+            <span><b>♠&#xFE0E;</b>Maça</span><span class="r"><b>♥&#xFE0E;</b>Kupa</span>
+            <span><b>♣&#xFE0E;</b>Sinek</span><span class="r"><b>♦&#xFE0E;</b>Karo</span>
+          </div>
+        </div>
+      </div>
+      <p>Hata yaparsan 6 saniye bekle, giriş sıfırlanır.</p>
+    </section>
+
+    <section class="block" aria-labelledby="h-wall">
+      <h2>Gerçekçilik</h2>
+      <h3 id="h-wall">Kendi duvar kağıdın</h3>
+      <p>Gerçek duvar kağıdının orijinal fotoğrafını seç. Sahte kilit ekranı başta bununla açılır, kimse farkı anlamaz.</p>
+      <div class="row">
+        <label class="btn small" style="position:relative">Fotoğraf seç<input type="file" id="wallfile" accept="image/*"></label>
+        <button class="btn small" id="wallreset" type="button">Varsayılana dön</button>
+      </div>
+      <span class="status" id="wallstatus"></span>
+    </section>
+
+    <section class="block" aria-labelledby="h-check">
+      <h2>Gösteriden önce</h2>
+      <h3 id="h-check">Kontrol listesi</h3>
+      <ul class="checks">
+        <li><b>Ayarlar › Ekran ve Parlaklık › Otomatik Kilit › Asla.</b> Yoksa gerçek telefon kilitlenir ve numara bozulur.</li>
+        <li><b>Rahatsız Etmeyin</b>'i aç. Bildirim düşerse sahte ekranın üstünde görünür.</li>
+        <li>Uygulamayı Safari'den <b>Ana Ekrana Ekle</b> ile aç. Tam ekran çalışır, adres çubuğu görünmez.</li>
+        <li>Parlaklığı biraz düşük tut. Sahte ekranlar karanlıkta daha inandırıcı.</li>
+      </ul>
+      <p class="exit-hint">Gösteri ekranından çıkmak için: sol üst köşeye 1 saniye basılı tut.</p>
+    </section>
+  </div>
+</section>
+
+<section id="lock" class="screen" hidden aria-label="Kilit ekranı">
+  <canvas id="wallA" class="wall"></canvas>
+  <canvas id="wallB" class="wall" style="opacity:0"></canvas>
+  <div class="ls-top"><div id="ls-date"></div><div id="ls-time"></div></div>
+  <span class="ls-btn l"><svg viewBox="0 0 24 24"><path d="M8 2h8v4l-2 4v11a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V10L8 6z"/><path d="M12 13v3"/></svg></span>
+  <span class="ls-btn r"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+  <div class="ls-bar" id="ls-bar"></div>
+</section>
+
+<section id="note" class="screen" hidden aria-label="Not">
+  <header class="nbar"><button type="button" tabindex="-1">‹ Geri</button><button type="button" class="ndone" id="ndone">Bitti</button></header>
+  <div class="nhead"><h2 id="ntitle">Yeni not</h2><p id="nmeta"></p></div>
+  <textarea id="ntext" placeholder="Buraya yaz…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+  <footer class="nfoot"><button type="button" id="nclear">Temizle</button></footer>
+</section>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const VALUES = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const SUITS = ['S','H','C','D']; // ızgara sırası: sol üst, sağ üst, sol alt, sağ alt
+const SUIT_TR = {S:'Maça', H:'Kupa', C:'Sinek', D:'Karo'};
+const SUIT_CH = {S:'♠︎', H:'♥︎', C:'♣︎', D:'♦︎'};
+const VAL_TR = {A:'As', J:'Vale', Q:'Kız', K:'Papaz'};
+const RED = '#b5142c', BLACK = '#17171b';
+const SERIF = '"Bodoni Moda", Didot, Georgia, serif';
+const HAND = '"Caveat", "Bradley Hand", cursive';
+const isRed = s => s === 'H' || s === 'D';
+const cardName = c => `${SUIT_TR[c.s]} ${VAL_TR[c.v] || c.v}`;
+
+/* ---------- Kart çizimi ---------- */
+function drawSuit(ctx, s, cx, cy, size, flip, color) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  if (flip) ctx.rotate(Math.PI);
+  ctx.scale(size / 100, size / 100);
+  ctx.translate(-50, -50);
+  ctx.fillStyle = color;
+  const fill = () => { ctx.closePath(); ctx.fill(); ctx.beginPath(); };
+  ctx.beginPath();
+  if (s === 'H') {
+    ctx.moveTo(50, 94);
+    ctx.bezierCurveTo(18, 68, 0, 52, 0, 29);
+    ctx.bezierCurveTo(0, 12, 12, 2, 27, 2);
+    ctx.bezierCurveTo(38, 2, 46, 9, 50, 19);
+    ctx.bezierCurveTo(54, 9, 62, 2, 73, 2);
+    ctx.bezierCurveTo(88, 2, 100, 12, 100, 29);
+    ctx.bezierCurveTo(100, 52, 82, 68, 50, 94);
+    fill();
+  } else if (s === 'D') {
+    ctx.moveTo(50, 0);
+    ctx.quadraticCurveTo(68, 28, 86, 50);
+    ctx.quadraticCurveTo(68, 72, 50, 100);
+    ctx.quadraticCurveTo(32, 72, 14, 50);
+    ctx.quadraticCurveTo(32, 28, 50, 0);
+    fill();
+  } else if (s === 'S') {
+    ctx.moveTo(50, 0);
+    ctx.bezierCurveTo(60, 20, 100, 38, 100, 62);
+    ctx.bezierCurveTo(100, 78, 88, 88, 74, 88);
+    ctx.bezierCurveTo(64, 88, 57, 83, 54, 76);
+    ctx.bezierCurveTo(55, 88, 60, 95, 70, 100);
+    ctx.lineTo(30, 100);
+    ctx.bezierCurveTo(40, 95, 45, 88, 46, 76);
+    ctx.bezierCurveTo(43, 83, 36, 88, 26, 88);
+    ctx.bezierCurveTo(12, 88, 0, 78, 0, 62);
+    ctx.bezierCurveTo(0, 38, 40, 20, 50, 0);
+    fill();
+  } else {
+    for (const [x, y] of [[50, 26], [25, 60], [75, 60]]) { ctx.moveTo(x + 23, y); ctx.arc(x, y, 23, 0, Math.PI * 2); fill(); }
+    ctx.rect(38, 40, 24, 30); fill();
+    ctx.moveTo(46, 60);
+    ctx.bezierCurveTo(46, 82, 42, 93, 31, 100);
+    ctx.lineTo(69, 100);
+    ctx.bezierCurveTo(58, 93, 54, 82, 54, 60);
+    fill();
+  }
+  ctx.restore();
+}
+
+function rr(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+const L = .3, C = .5, R = .7;
+const SIX = [[L,.2],[R,.2],[L,.5],[R,.5],[L,.8],[R,.8]];
+const PIPS = {
+  '2': [[C,.2],[C,.8]],
+  '3': [[C,.2],[C,.5],[C,.8]],
+  '4': [[L,.2],[R,.2],[L,.8],[R,.8]],
+  '5': [[L,.2],[R,.2],[C,.5],[L,.8],[R,.8]],
+  '6': SIX,
+  '7': [...SIX,[C,.35]],
+  '8': [...SIX,[C,.35],[C,.65]],
+  '9': [[L,.2],[R,.2],[L,.4],[R,.4],[C,.5],[L,.6],[R,.6],[L,.8],[R,.8]],
+  '10': [[L,.2],[R,.2],[C,.3],[L,.4],[R,.4],[L,.6],[R,.6],[C,.7],[L,.8],[R,.8]],
+};
+
+// Kartı (0,0)-(W,H) kutusuna çizer.
+function drawCardFace(ctx, c, W, H) {
+  const col = isRed(c.s) ? RED : BLACK;
+  rr(ctx, 0, 0, W, H, W * .055);
+  const pg = ctx.createLinearGradient(0, 0, W, H);
+  pg.addColorStop(0, '#fffdf8'); pg.addColorStop(1, '#ede8dc');
+  ctx.fillStyle = pg; ctx.fill();
+  ctx.lineWidth = Math.max(1, W * .004); ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.stroke();
+
+  const corner = () => {
+    const fs = W * .155, cx = W * .1, base = H * .035 + fs * .8;
+    ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.font = `600 ${fs}px ${SERIF}`;
+    ctx.save();
+    ctx.translate(cx, base);
+    if (c.v === '10') ctx.scale(.72, 1);
+    ctx.fillText(c.v, 0, 0);
+    ctx.restore();
+    drawSuit(ctx, c.s, cx, base + W * .085, W * .085, false, col);
+  };
+  corner();
+  ctx.save(); ctx.translate(W, H); ctx.rotate(Math.PI); corner(); ctx.restore();
+
+  if (c.v === 'A') {
+    drawSuit(ctx, c.s, W / 2, H / 2, W * (c.s === 'S' ? .46 : .38), false, col);
+  } else if (PIPS[c.v]) {
+    for (const [x, y] of PIPS[c.v]) drawSuit(ctx, c.s, W * x, H * y, W * .16, y > .5, col);
+  } else {
+    const fx = W * .19, fy = H * .11, fw = W * .62, fh = H * .78;
+    ctx.fillStyle = isRed(c.s) ? 'rgba(212,40,63,.07)' : 'rgba(30,40,90,.07)';
+    ctx.fillRect(fx, fy, fw, fh);
+    ctx.lineWidth = W * .006; ctx.strokeStyle = col; ctx.strokeRect(fx, fy, fw, fh);
+    ctx.lineWidth = W * .004; ctx.strokeStyle = '#c9a24a';
+    ctx.strokeRect(fx + W * .022, fy + W * .022, fw - W * .044, fh - W * .044);
+    const half = () => {
+      ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `italic 600 ${W * .34}px ${SERIF}`;
+      ctx.fillText(c.v, W / 2, H * .33);
+      drawSuit(ctx, c.s, fx + W * .11, fy + W * .12, W * .09, false, col);
+      ctx.beginPath();
+      ctx.arc(W / 2, H * .5, W * .19, Math.PI * 1.15, Math.PI * 1.85);
+      ctx.lineWidth = W * .004; ctx.strokeStyle = '#c9a24a'; ctx.stroke();
+    };
+    half();
+    ctx.save(); ctx.translate(W, H); ctx.rotate(Math.PI); half(); ctx.restore();
+    ctx.beginPath(); ctx.moveTo(fx + fw * .12, H / 2); ctx.lineTo(fx + fw * .88, H / 2);
+    ctx.lineWidth = W * .004; ctx.strokeStyle = col; ctx.globalAlpha = .5; ctx.stroke(); ctx.globalAlpha = 1;
+  }
+}
+
+let noisePat = null;
+function noise(ctx) {
+  if (!noisePat) {
+    const n = document.createElement('canvas'); n.width = n.height = 160;
+    const nc = n.getContext('2d'), img = nc.createImageData(160, 160);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const v = Math.random() * 255;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 40;
+    }
+    nc.putImageData(img, 0, 0);
+    noisePat = n;
+  }
+  return ctx.createPattern(noisePat, 'repeat');
+}
+
+function vignette(ctx, w, h, a) {
+  const v = ctx.createRadialGradient(w / 2, h * .55, Math.min(w, h) * .25, w / 2, h * .55, Math.max(w, h) * .75);
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, `rgba(0,0,0,${a})`);
+  ctx.fillStyle = v; ctx.fillRect(0, 0, w, h);
+}
+
+function drawCardScene(ctx, w, h, card) {
+  const g = ctx.createRadialGradient(w * .5, h * .58, 0, w * .5, h * .58, Math.max(w, h) * .8);
+  g.addColorStop(0, '#22644a'); g.addColorStop(1, '#0a231a');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  ctx.globalAlpha = .55; ctx.fillStyle = noise(ctx); ctx.fillRect(0, 0, w, h); ctx.globalAlpha = 1;
+
+  const cw = Math.min(w * .6, h * .46 / 1.4), ch = cw * 1.4;
+  ctx.save();
+  ctx.translate(w * .5, h * .62);
+  ctx.rotate(-.075);
+  ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = cw * .14; ctx.shadowOffsetY = cw * .06; ctx.shadowOffsetX = cw * .02;
+  rr(ctx, -cw / 2, -ch / 2, cw, ch, cw * .055); ctx.fillStyle = '#f4f0e6'; ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.translate(-cw / 2, -ch / 2);
+  drawCardFace(ctx, card, cw, ch);
+  rr(ctx, 0, 0, cw, ch, cw * .055); ctx.clip();
+  const gl = ctx.createLinearGradient(0, 0, cw, ch);
+  gl.addColorStop(0, 'rgba(255,255,255,.22)'); gl.addColorStop(.4, 'rgba(255,255,255,0)'); gl.addColorStop(1, 'rgba(0,0,0,.08)');
+  ctx.fillStyle = gl; ctx.fillRect(0, 0, cw, ch);
+  ctx.restore();
+  vignette(ctx, w, h, .5);
+}
+
+function drawNoteScene(ctx, w, h, text) {
+  const g = ctx.createLinearGradient(0, 0, w, h);
+  g.addColorStop(0, '#4a3322'); g.addColorStop(1, '#22160d');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(0,0,0,.18)';
+  for (let y = 0; y < h; y += h / 60) {
+    ctx.lineWidth = 1 + Math.random() * w * .002;
+    ctx.beginPath(); ctx.moveTo(0, y);
+    ctx.bezierCurveTo(w * .3, y + Math.random() * 14 - 7, w * .7, y + Math.random() * 14 - 7, w, y + Math.random() * 10 - 5);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = .4; ctx.fillStyle = noise(ctx); ctx.fillRect(0, 0, w, h); ctx.globalAlpha = 1;
+
+  const s = Math.min(w * .74, h * .42);
+  ctx.save();
+  ctx.translate(w * .5, h * .62); ctx.rotate(.05);
+  ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = s * .1; ctx.shadowOffsetY = s * .04;
+  ctx.fillStyle = '#f9eeb4'; ctx.fillRect(-s / 2, -s / 2, s, s);
+  ctx.shadowColor = 'transparent';
+  const pg = ctx.createLinearGradient(0, -s / 2, 0, s / 2);
+  pg.addColorStop(0, 'rgba(0,0,0,.06)'); pg.addColorStop(.12, 'rgba(0,0,0,0)');
+  ctx.fillStyle = pg; ctx.fillRect(-s / 2, -s / 2, s, s);
+  ctx.fillStyle = '#1f2a5c'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  let fs = s * .24, lines;
+  do {
+    ctx.font = `500 ${fs}px ${HAND}`;
+    lines = wrap(ctx, text.trim(), s * .82);
+    fs *= .9;
+  } while ((lines.length * fs * 1.1 > s * .8 || lines.some(l => ctx.measureText(l).width > s * .86)) && fs > s * .05);
+  const lh = fs / .9 * 1.05;
+  lines.forEach((l, i) => ctx.fillText(l, 0, (i - (lines.length - 1) / 2) * lh));
+  ctx.restore();
+  vignette(ctx, w, h, .45);
+}
+
+function wrap(ctx, text, max) {
+  const out = []; let line = '';
+  for (const word of text.split(/\s+/)) {
+    const t = line ? line + ' ' + word : word;
+    if (ctx.measureText(t).width > max && line) { out.push(line); line = word; } else line = t;
+  }
+  if (line) out.push(line);
+  return out.length ? out : [''];
+}
+
+let userImg = null;
+function drawNeutral(ctx, w, h) {
+  if (userImg) {
+    const iw = userImg.width, ih = userImg.height, s = Math.max(w / iw, h / ih);
+    ctx.drawImage(userImg, (w - iw * s) / 2, (h - ih * s) / 2, iw * s, ih * s);
+    return;
+  }
+  ctx.fillStyle = '#0c1830'; ctx.fillRect(0, 0, w, h);
+  for (const [x, y, r, c] of [[.15, .2, .75, '47,95,150'], [.9, .35, .65, '118,72,140'], [.35, .9, .85, '28,112,110'], [.8, .95, .5, '196,110,90']]) {
+    const gr = ctx.createRadialGradient(w * x, h * y, 0, w * x, h * y, Math.max(w, h) * r);
+    gr.addColorStop(0, `rgba(${c},.85)`); gr.addColorStop(1, `rgba(${c},0)`);
+    ctx.fillStyle = gr; ctx.fillRect(0, 0, w, h);
+  }
+  ctx.globalAlpha = .25; ctx.fillStyle = noise(ctx); ctx.fillRect(0, 0, w, h); ctx.globalAlpha = 1;
+}
+
+/* ---------- Ekran yönetimi ---------- */
+let current = 'menu', wakeLock = null;
+async function keepAwake() {
+  try {
+    if ('wakeLock' in navigator && document.visibilityState === 'visible' && !wakeLock) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    }
+  } catch (_) { wakeLock = null; }
+}
+document.addEventListener('visibilitychange', () => { if (current !== 'menu') keepAwake(); });
+
+function show(id) {
+  for (const s of ['menu', 'lock', 'note']) $(s).hidden = s !== id;
+  current = id;
+  if (id === 'menu') { resetLock(); try { wakeLock && wakeLock.release(); } catch (_) {} }
+  else keepAwake();
+}
+
+/* ---------- Kilit ekranı ---------- */
+const lockEl = $('lock');
+let front = $('wallA'), back = $('wallB'), frontSpec = {type: 'neutral'};
+const lock = {mode: 'idle', step: 0, value: null, resetTimer: 0, revealTimer: 0};
+
+function paint(c, spec) {
+  const r = lockEl.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 3);
+  c.width = Math.max(1, Math.round(r.width * d)); c.height = Math.max(1, Math.round(r.height * d));
+  const ctx = c.getContext('2d'), w = c.width, h = c.height;
+  if (spec.type === 'card') drawCardScene(ctx, w, h, spec.card);
+  else if (spec.type === 'note') drawNoteScene(ctx, w, h, spec.text);
+  else drawNeutral(ctx, w, h);
+}
+function setWall(spec, fade) {
+  if (!fade) {
+    for (const c of [front, back]) c.style.transition = 'none';
+    paint(front, spec); front.style.opacity = 1; back.style.opacity = 0;
+    void front.offsetWidth;
+    for (const c of [front, back]) c.style.transition = '';
+  } else {
+    paint(back, spec); back.style.opacity = 1; front.style.opacity = 0;
+    [front, back] = [back, front];
+  }
+  frontSpec = spec;
+}
+function resetLock() {
+  clearTimeout(lock.resetTimer); clearTimeout(lock.revealTimer);
+  Object.assign(lock, {mode: 'idle', step: 0, value: null});
+}
+function openLock(spec, opts = {}) {
+  resetLock();
+  show('lock'); updateClock();
+  setWall(spec, false);
+  if (opts.input) lock.mode = 'input';
+  if (opts.revealSpec) scheduleReveal(opts.revealSpec, opts.delay || 3500);
+}
+function scheduleReveal(spec, delay) {
+  lock.mode = 'armed';
+  lock.revealTimer = setTimeout(() => { setWall(spec, true); lock.mode = 'done'; }, delay);
+}
+function tick() {
+  const b = $('ls-bar'); b.classList.add('tick');
+  setTimeout(() => b.classList.remove('tick'), 260);
+}
+function lockTap(x, y) {
+  if (lock.mode !== 'input') return;
+  const r = lockEl.getBoundingClientRect();
+  const fx = (x - r.left) / r.width, fy = (y - r.top) / r.height;
+  if (lock.step === 0) {
+    const idx = Math.min(3, Math.floor(fy * 4)) * 4 + Math.min(3, Math.floor(fx * 4));
+    if (idx > 12) return;
+    lock.value = VALUES[idx]; lock.step = 1; tick();
+    clearTimeout(lock.resetTimer);
+    lock.resetTimer = setTimeout(() => { if (lock.mode === 'input') { lock.step = 0; lock.value = null; } }, 6000);
+  } else {
+    clearTimeout(lock.resetTimer);
+    const s = SUITS[(fy < .5 ? 0 : 2) + (fx < .5 ? 0 : 1)];
+    tick();
+    scheduleReveal({type: 'card', card: {v: lock.value, s}}, 3500);
+  }
+}
+
+const dateFmt = new Intl.DateTimeFormat('tr-TR', {weekday: 'long', day: 'numeric', month: 'long'});
+function updateClock() {
+  const now = new Date();
+  $('ls-date').textContent = dateFmt.format(now);
+  $('ls-time').textContent = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const nm = $('nmeta');
+  if (!nm.dataset.peeking) nm.textContent = new Intl.DateTimeFormat('tr-TR', {day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'}).format(now);
+}
+setInterval(() => { if (current !== 'menu') updateClock(); }, 1000);
+window.addEventListener('resize', () => { if (current === 'lock') { paint(front, frontSpec); } });
+
+/* ---------- Gizli dokunuşlar: köşeden çıkış + kilit ekranı girişi ---------- */
+let press = null;
+document.addEventListener('pointerdown', e => {
+  press = {x: e.clientX, y: e.clientY, long: false, timer: 0};
+  if (current !== 'menu' && e.clientX < 80 && e.clientY < 110 && !e.target.closest('#ntitle, #ntext')) {
+    const p = press;
+    p.timer = setTimeout(() => { p.long = true; show('menu'); }, 1200);
+  }
+});
+document.addEventListener('pointerup', e => {
+  if (!press) return;
+  const p = press; press = null; clearTimeout(p.timer);
+  if (p.long || Math.hypot(e.clientX - p.x, e.clientY - p.y) > 24) return;
+  if (current === 'lock') lockTap(e.clientX, e.clientY);
+});
+document.addEventListener('pointercancel', () => { if (press) clearTimeout(press.timer); press = null; });
+document.addEventListener('contextmenu', e => { if (current !== 'menu') e.preventDefault(); });
+
+/* ---------- Silinen not ---------- */
+const ntext = $('ntext');
+const note = {peak: '', cleared: true};
+function trackNote() {
+  const v = ntext.value;
+  if (!v.trim()) { note.cleared = true; return; }
+  if (note.cleared) { note.peak = v; note.cleared = false; }
+  else if (v.trim().length >= note.peak.trim().length) note.peak = v;
+}
+ntext.addEventListener('input', trackNote);
+$('nclear').addEventListener('click', () => { ntext.value = ''; note.cleared = true; ntext.blur(); });
+$('ndone').addEventListener('click', () => ntext.blur());
+
+const ntitle = $('ntitle');
+let titleTimer = 0, titleTaps = [], peekTimer = 0;
+ntitle.addEventListener('pointerdown', () => {
+  titleTimer = setTimeout(() => {
+    titleTimer = 0;
+    const nm = $('nmeta');
+    nm.dataset.peeking = '1';
+    nm.textContent = note.peak.trim() || '—';
+    clearTimeout(peekTimer);
+    peekTimer = setTimeout(() => { delete nm.dataset.peeking; updateClock(); }, 2500);
+  }, 700);
+});
+ntitle.addEventListener('pointerup', () => {
+  if (!titleTimer) return;
+  clearTimeout(titleTimer); titleTimer = 0;
+  const now = Date.now();
+  titleTaps = titleTaps.filter(t => now - t < 700); titleTaps.push(now);
+  if (titleTaps.length >= 3) {
+    titleTaps = [];
+    ntext.blur();
+    const text = note.peak.trim();
+    const card = parseCard(text);
+    const spec = card ? {type: 'card', card} : text ? {type: 'note', text} : null;
+    openLock({type: 'neutral'}, spec ? {revealSpec: spec, delay: 3000} : {});
+  }
+});
+ntitle.addEventListener('pointercancel', () => { clearTimeout(titleTimer); titleTimer = 0; });
+
+function parseCard(text) {
+  let t = text.toLocaleLowerCase('tr')
+    .replace(/[^a-z0-9çğıöşüâî♠♥♦♣\s]/g, ' ')
+    .replace(/(\d)([^\d\s])/g, '$1 $2').replace(/([^\d\s])(\d)/g, '$1 $2');
+  t = t.replace(/♠/g, ' maça ').replace(/♥/g, ' kupa ').replace(/♦/g, ' karo ').replace(/♣/g, ' sinek ');
+  const suitMap = {kupa:'H', kalp:'H', hearts:'H', heart:'H', karo:'D', diamonds:'D', diamond:'D', sinek:'C', ispati:'C', 'ispatı':'C', trefl:'C', clubs:'C', club:'C', 'maça':'S', maca:'S', pik:'S', spades:'S', spade:'S'};
+  const valMap = {as:'A', 'ası':'A', asi:'A', ace:'A', a:'A', bir:'A', iki:'2', 'üç':'3', uc:'3', 'dört':'4', dort:'4', 'beş':'5', bes:'5', 'altı':'6', alti:'6', yedi:'7', sekiz:'8', dokuz:'9', on:'10', onlu:'10', onu:'10',
+    vale:'J', bacak:'J', 'oğlan':'J', oglan:'J', jack:'J', j:'J', 'kız':'Q', kiz:'Q', 'kraliçe':'Q', kralice:'Q', dam:'Q', queen:'Q', q:'Q', papaz:'K', kral:'K', 'rüz':'K', ruz:'K', king:'K', k:'K'};
+  for (let n = 1; n <= 10; n++) valMap[String(n)] = n === 1 ? 'A' : String(n);
+  const find = (word, map) => {
+    if (map[word]) return map[word];
+    const keys = Object.keys(map).filter(k => k.length >= 3).sort((a, b) => b.length - a.length);
+    const k = keys.find(k => word.startsWith(k));
+    return k ? map[k] : null;
+  };
+  let v = null, s = null;
+  for (const w of t.split(/\s+/).filter(Boolean)) {
+    if (!s) { const hit = find(w, suitMap); if (hit) { s = hit; continue; } }
+    if (!v) { const hit = find(w, valMap); if (hit) v = hit; }
+  }
+  return v && s ? {v, s} : null;
+}
+
+/* ---------- Menü ---------- */
+const pick = {v: '7', s: 'H'};
+function buildMenu() {
+  const vals = $('vals'), suits = $('suits');
+  for (const v of VALUES) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = v; b.dataset.v = v;
+    b.setAttribute('aria-label', VAL_TR[v] || v);
+    b.addEventListener('click', () => { pick.v = v; syncPick(); });
+    vals.append(b);
+  }
+  for (const s of SUITS) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip suit-chip' + (isRed(s) ? ' red' : ''); b.textContent = SUIT_CH[s]; b.dataset.s = s;
+    b.setAttribute('aria-label', SUIT_TR[s]);
+    b.addEventListener('click', () => { pick.s = s; syncPick(); });
+    suits.append(b);
+  }
+  const map = $('map-vals');
+  for (let i = 0; i < 16; i++) {
+    const sp = document.createElement('span');
+    sp.textContent = VALUES[i] || '·';
+    if (!VALUES[i]) sp.className = 'off';
+    map.append(sp);
+  }
+  syncPick();
+}
+function syncPick() {
+  for (const b of $('vals').children) b.setAttribute('aria-pressed', b.dataset.v === pick.v);
+  for (const b of $('suits').children) b.setAttribute('aria-pressed', b.dataset.s === pick.s);
+  $('pick-name').textContent = cardName(pick);
+  const c = $('preview'), d = Math.min(window.devicePixelRatio || 1, 3);
+  c.width = 96 * d; c.height = 134 * d;
+  const ctx = c.getContext('2d');
+  ctx.scale(d, d); drawCardFace(ctx, pick, 96, 134);
+}
+
+$('go-force').addEventListener('click', () => openLock({type: 'card', card: {...pick}}));
+$('go-input').addEventListener('click', () => openLock({type: 'neutral'}, {input: true}));
+$('go-note').addEventListener('click', () => {
+  ntext.value = ''; note.peak = ''; note.cleared = true;
+  show('note'); updateClock();
+});
+
+function updateWallStatus() {
+  $('wallstatus').textContent = userImg ? 'Kendi fotoğrafın kullanılıyor.' : 'Şu an varsayılan soyut duvar kağıdı kullanılıyor.';
+}
+$('wallfile').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const url = URL.createObjectURL(f), img = new Image();
+  img.onload = () => {
+    const s = Math.min(1, 2000 / Math.max(img.width, img.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    userImg = c;
+    try { localStorage.setItem('kk-wall', c.toDataURL('image/jpeg', .85)); } catch (_) {}
+    URL.revokeObjectURL(url); updateWallStatus();
+  };
+  img.onerror = () => { $('wallstatus').textContent = 'Bu fotoğraf açılamadı. Başka bir fotoğraf dene.'; };
+  img.src = url;
+});
+$('wallreset').addEventListener('click', () => {
+  userImg = null;
+  try { localStorage.removeItem('kk-wall'); } catch (_) {}
+  updateWallStatus();
+});
+try {
+  const saved = localStorage.getItem('kk-wall');
+  if (saved) { const img = new Image(); img.onload = () => { userImg = img; updateWallStatus(); }; img.src = saved; }
+} catch (_) {}
+
+buildMenu();
+updateWallStatus();
+if (document.fonts) {
+  Promise.all([document.fonts.load(`600 40px ${SERIF}`), document.fonts.load(`italic 600 40px ${SERIF}`), document.fonts.load(`500 40px ${HAND}`)])
+    .then(syncPick, () => {});
+}
+})();
+</script>
+</body>
+</html>
